@@ -4,6 +4,19 @@ This changelog tracks changes during the v10 alpha period. For the full per-pack
 
 ---
 
+## Unreleased
+
+### Features
+
+- `useLocalNodes` takes a `useMemo`-style dependency array as its second argument. No array
+  re-evaluates the creator on every component render (including a `useCallback` creator, which
+  previously opted out via identity memoization - pass `[]` instead); `[]` reuses the result across
+  ordinary renders; `[a, b]` rebuilds when a declared JavaScript construction input changes by
+  `Object.is`. Registered-resource replacement, a change of owning store and HMR / `rebuild*`
+  invalidation remain independent triggers in every mode, and always run the current render's
+  creator ([#3918](https://github.com/pmndrs/react-three-fiber/issues/3918), part 1 of
+  [#3888](https://github.com/pmndrs/react-three-fiber/issues/3888)).
+
 ## 10.0.0-alpha.5
 
 Alpha 5 is a types release. The WebGPU resource hooks now carry three's exact node generics, the

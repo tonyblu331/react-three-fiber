@@ -214,7 +214,8 @@ export function createRoot<TCanvas extends HTMLCanvasElement | OffscreenCanvas>(
   let unwatchDpr: (() => void) | undefined
 
   // A display change doesn't resize the canvas or change the prop, so re-resolve the prop here. A
-  // setDpr() since the last resolve owns the value, the same as across re-configures
+  // setDpr() since the last resolve owns the value, the same as across re-configures, except a
+  // setDpr(initialDpr): that is AdaptiveDpr restoring full quality, not the app taking over
   const resolveDpr = () => {
     // A configure still awaiting its renderer at unmount can start watching after teardown
     if (_roots.get(canvas)?.store !== store) return unwatchDpr?.()
@@ -228,7 +229,9 @@ export function createRoot<TCanvas extends HTMLCanvasElement | OffscreenCanvas>(
     }
     dprChangedInXR = false
     const dpr = lastConfiguredProps.dpr
-    if (dpr === undefined || state.viewport.dpr !== resolvedDpr || calculateDpr(dpr) === resolvedDpr) return
+    const { dpr: current, initialDpr } = state.viewport
+    const overridden = current !== resolvedDpr && current !== initialDpr
+    if (dpr === undefined || overridden || calculateDpr(dpr) === current) return
     state.setDpr(dpr)
     resolvedDpr = store.getState().viewport.dpr
   }

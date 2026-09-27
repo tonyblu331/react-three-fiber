@@ -168,6 +168,33 @@ describe('dpr display changes', () => {
     expect(store.getState().viewport.dpr).toBe(2)
   })
 
+  it('keeps following the display after AdaptiveDpr lowers and restores the pixel ratio', async () => {
+    const [, store] = await render([1, 3])
+    await act(async () => setDisplayDpr(2))
+    expect(store.getState().viewport.dpr).toBe(2)
+
+    // AdaptiveDpr regresses to a fraction of initialDpr, then restores initialDpr
+    const { initialDpr } = store.getState().viewport
+    await act(async () => store.getState().setDpr(initialDpr * 0.5))
+    await act(async () => store.getState().setDpr(initialDpr))
+
+    await act(async () => setDisplayDpr(3))
+    expect(store.getState().viewport.dpr).toBe(3)
+  })
+
+  it('treats setDpr(initialDpr) as a restore, not an override', async () => {
+    // AdaptiveDpr's restore and an app pinning the pixel ratio to initialDpr are the same call; it
+    // reads as a restore, so the display is followed again. Any other value stays an override
+    Object.defineProperty(window, 'devicePixelRatio', { configurable: true, value: 2 })
+    const [, store] = await render([1, 2])
+    expect(store.getState().viewport.initialDpr).toBe(2)
+    await act(async () => setDisplayDpr(1))
+    await act(async () => store.getState().setDpr(2))
+
+    await act(async () => setDisplayDpr(1.5))
+    expect(store.getState().viewport.dpr).toBe(1.5)
+  })
+
   it('keeps initialDpr', async () => {
     const [, store] = await render([1, 2])
     await act(async () => setDisplayDpr(2))
